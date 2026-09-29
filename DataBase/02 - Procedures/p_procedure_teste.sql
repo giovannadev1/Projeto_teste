@@ -34,7 +34,9 @@ SET NOCOUNT ON
 
 	BEGIN TRY
 
-		SELECT * 
+	/*Aqui há um teste de procedure*/
+
+		SELECT TOP 50 * 
 		FROM t_nome
 
 		SELECT @cd_retorno = 0
