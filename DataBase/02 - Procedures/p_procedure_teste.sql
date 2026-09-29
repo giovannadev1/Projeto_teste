@@ -35,6 +35,7 @@ SET NOCOUNT ON
 	BEGIN TRY
 
 	/*Aqui há um teste de procedure*/
+	/*Dois testes de procedure*/
 
 		SELECT TOP 50 * 
 		FROM t_nome
