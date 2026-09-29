@@ -39,7 +39,7 @@ SET NOCOUNT ON
 	/*Aqui há um teste de procedure*/
 	/*Dois testes de procedure*/
 
-		SELECT TOP 50 * 
+		SELECT id_tabela 
 		FROM t_nome
 
 		SELECT @cd_retorno = 0
