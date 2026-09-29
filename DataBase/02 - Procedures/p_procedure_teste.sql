@@ -1,3 +1,5 @@
+:setvar NR_VERSAO "1.1.1"
+GO
 CREATE OR ALTER PROCEDURE [dbo].[p_procedure_teste]
 (
 	/*Parâmetros alternativos*/
@@ -54,3 +56,4 @@ SET NOCOUNT ON
 									END 
 	END CATCH
 
+GO
