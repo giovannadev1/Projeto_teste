@@ -1,3 +1,4 @@
+
 name: Versionamento SQL
 
 on:
@@ -6,27 +7,84 @@ on:
       - develop
       - main
 
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   versionar:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Baixar os arquivos do repositório
       - name: Baixar repositório
         uses: actions/checkout@v4
 
+      # 2. Definir a versão conforme a branch
       - name: Definir versão
         shell: bash
         run: |
-          BASE=$(cat VERSION)
+          BASE=$(tr -d '[:space:]' < VERSION)
 
-          if [ "${GITHUB_REF_NAME}" = "develop" ]; then
+          if [[ "$GITHUB_REF_NAME" == "develop" ]]; then
             VERSAO="${BASE}.1"
+
+          elif [[ "$GITHUB_REF_NAME" == "main" ]]; then
+            IFS='.' read -r MAJOR MINOR <<< "$BASE"
+
+            MINOR=$((MINOR + 1))
+
+            VERSAO="${MAJOR}.${MINOR}"
+
           else
-            VERSAO="${BASE}"
+            echo "Branch não reconhecida."
+            exit 1
           fi
 
-          echo "NR_VERSAO=${VERSAO}" >> $GITHUB_ENV
+          echo "NR_VERSAO=$VERSAO" >> "$GITHUB_ENV"
 
-      - name: Exibir versão
+          echo "Versão definida: $VERSAO"
+
+      # 3. Substituir o marcador nas procedures
+      - name: Substituir versão nas procedures
+        shell: bash
+        run: |
+          find database/procedures \
+            -type f \
+            -name "*.sql" \
+            -print0 |
+          while IFS= read -r -d '' arquivo; do
+
+            sed -i "s/\$(NR_VERSAO)/${NR_VERSAO}/g" "$arquivo"
+
+            echo "Versão aplicada em: $arquivo"
+
+          done
+
+      # 4. Conferir a versão aplicada
+      - name: Conferir versão das procedures
+        shell: bash
         run: |
           echo "Versão gerada: $NR_VERSAO"
+
+          if grep -R -n -F \
+            '$(NR_VERSAO)' database/procedures; then
+
+            echo "ERRO: Existem marcadores não substituídos."
+            exit 1
+
+          else
+            echo "Todos os marcadores foram substituídos."
+          fi
+
+          grep -R -n '@nr_versao' database/procedures
+
+      # 5. Disponibilizar os arquivos SQL processados
+      - name: Publicar artefato SQL
+        uses: actions/upload-artifact@v4
+        with:
+          name: procedures-${{ env.NR_VERSAO }}
+          path: database/procedures/
+          if-no-files-found: error
+          retention-days: 30
