@@ -1,0 +1,32 @@
+name: Versionamento SQL
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  versionar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Definir versão
+        shell: bash
+        run: |
+          BASE=$(cat VERSION)
+
+          if [ "${GITHUB_REF_NAME}" = "develop" ]; then
+            VERSAO="${BASE}.1"
+          else
+            VERSAO="${BASE}"
+          fi
+
+          echo "NR_VERSAO=${VERSAO}" >> $GITHUB_ENV
+
+      - name: Exibir versão
+        run: |
+          echo "Versão gerada: $NR_VERSAO"
